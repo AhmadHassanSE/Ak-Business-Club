@@ -69,7 +69,8 @@ export function Navbar() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Cart Button */}
           <Link href="/cart">
             <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 hover:text-primary">
               <ShoppingBag className="h-5 w-5" />
@@ -80,6 +81,29 @@ export function Navbar() {
               )}
             </Button>
           </Link>
+
+          {/* Admin Login Button - Always Visible */}
+          {!user && (
+            <Link href="/login">
+              <Button 
+                variant="default" 
+                className="hidden sm:inline-flex bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all"
+              >
+                Admin Login
+              </Button>
+            </Link>
+          )}
+
+          {user && (
+            <Link href="/admin/dashboard">
+              <Button 
+                variant="default" 
+                className="hidden sm:inline-flex bg-accent hover:bg-accent/80 text-accent-foreground font-semibold shadow-md hover:shadow-lg transition-all"
+              >
+                Dashboard
+              </Button>
+            </Link>
+          )}
 
           {/* Mobile Menu */}
           <div className="md:hidden">
@@ -92,6 +116,21 @@ export function Navbar() {
               <SheetContent side="right" className="w-[300px]">
                 <div className="flex flex-col gap-6 mt-10">
                   <NavContent mobile />
+                  <div className="border-t pt-4 flex flex-col gap-3">
+                    {!user ? (
+                      <Link href="/login" onClick={() => setIsOpen(false)}>
+                        <Button variant="default" className="w-full bg-primary hover:bg-primary/90">
+                          Admin Login
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link href="/admin/dashboard" onClick={() => setIsOpen(false)}>
+                        <Button variant="default" className="w-full bg-accent hover:bg-accent/80">
+                          Dashboard
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
