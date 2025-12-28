@@ -26,8 +26,10 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: new PgSession({
-      createTableIfMissing: true,
       pool, // Use the pool from db.ts
+      tableName: "session",
+      createTableIfMissing: true,
+      schemaName: "public",
     }),
     cookie: {
       secure: app.get("env") === "production",
