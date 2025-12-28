@@ -4,8 +4,6 @@
     "builder": "nixpacks"
   },
   "deploy": {
-    "startCommand": "npm run build && npm start",
-    "restartPolicyType": "on_failure",
-    "restartPolicyMaxRetries": 5
+    "startCommand": "NODE_ENV=production node dist/index.cjs"
   }
 }

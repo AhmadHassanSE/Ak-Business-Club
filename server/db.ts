@@ -28,9 +28,16 @@ if (!process.env.DATABASE_URL) {
   const needsSsl = pgSslMode === "require" || pgSslMode === "true" || process.env.DATABASE_URL.includes("sslmode=require") || isRailway;
 
   if (needsSsl) {
-    // For Railway and other hosted databases, use SSL
-    const sslStrict = process.env.DB_SSL_STRICT !== "false";
-    poolConfig.ssl = sslStrict ? true : { rejectUnauthorized: false };
+    // For Railway and other hosted databases, use SSL without strict verification
+    // Railway uses self-signed certs, so we need rejectUnauthorized: false
+    poolConfig.ssl = { rejectUnauthorized: false };
+  }
+
+  // For Railway internal connections, increase connection timeout
+  if (isRailway) {
+    poolConfig.connectionTimeoutMillis = 10000; // 10 seconds
+    poolConfig.idleTimeoutMillis = 30000; // 30 seconds
+    poolConfig.max = 10; // Connection pool size
   }
 
   // Log connection details for debugging
@@ -49,44 +56,54 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Helper function to wait for database connection with retry logic
-export async function waitForDatabase(maxAttempts = 30, delayMs = 1000): Promise<boolean> {
+export async function waitForDatabase(maxAttempts?: number, delayMs?: number): Promise<boolean> {
   if (!pool) {
     console.warn("Database pool not initialized. Skipping connection wait.");
     return false;
   }
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  // For Railway, use more attempts with longer delays since DNS resolution takes time
+  const isRailway = process.env.DATABASE_URL?.includes("railway.internal");
+  const attempts = maxAttempts || (isRailway ? 60 : 30);
+  const delay = delayMs || (isRailway ? 2000 : 1000);
+
+  // eslint-disable-next-line no-console
+  console.log(`Starting database connection attempts (${attempts} attempts, ${delay}ms delay)...`);
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
       const client = await pool.connect();
       const result = await client.query("SELECT NOW()");
       client.release();
       // eslint-disable-next-line no-console
-      console.log("✓ Database connection established successfully at", result.rows[0]);
+      console.log("✓ Database connection established successfully at", result.rows[0].now);
       return true;
     } catch (err: any) {
       const errorMsg = err?.message || String(err);
-      const isNetworkError = errorMsg.includes("ENOTFOUND") || errorMsg.includes("ECONNREFUSED") || errorMsg.includes("timeout");
+      const isNetworkError = errorMsg.includes("ENOTFOUND") || errorMsg.includes("ECONNREFUSED") || errorMsg.includes("timeout") || errorMsg.includes("getaddrinfo");
       
       // eslint-disable-next-line no-console
-      console.log(`Attempt ${attempt}/${maxAttempts}: Database connection failed - ${errorMsg}`);
+      console.log(`Attempt ${attempt}/${attempts}: Database connection failed - ${errorMsg}`);
       
-      if (attempt === maxAttempts) {
+      if (attempt === attempts) {
         // eslint-disable-next-line no-console
         console.error("❌ Failed to connect to database after maximum attempts");
         if (isNetworkError) {
           // eslint-disable-next-line no-console
-          console.error("This is a network error. Check that:");
+          console.error("Network error detected. Troubleshooting:");
           // eslint-disable-next-line no-console
-          console.error("  1. DATABASE_URL is correct (format: postgresql://user:pass@host:port/db)");
+          console.error("  1. Check DATABASE_URL format: postgresql://user:pass@host:port/db");
           // eslint-disable-next-line no-console
-          console.error("  2. For Railway: ensure PostgreSQL service is running and linked");
+          console.error("  2. For Railway: Verify PostgreSQL service is running in the same project");
           // eslint-disable-next-line no-console
-          console.error("  3. Network connectivity is available to the database host");
+          console.error("  3. Check that services are linked (they should share the same environment)");
+          // eslint-disable-next-line no-console
+          console.error("  4. Try redeploying both services together");
         }
         return false;
       }
       
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
   return false;

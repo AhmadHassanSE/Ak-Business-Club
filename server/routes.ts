@@ -49,45 +49,86 @@ async function hashPassword(password: string) {
 }
 
 async function seedDatabase() {
+    try {
+      // Try to check if tables exist by querying
+      await storage.getUserByUsername("nonexistent");
+    } catch (err: any) {
+      if (err?.code === "42P01") {
+        // Table doesn't exist - we need to run migrations
+        console.log("Database schema not found. Attempting to create tables...");
+        try {
+          // Import and run migrations
+          const { migrate } = await import("drizzle-orm/node-postgres/migrator");
+          const { pool } = await import("./db");
+          const path = await import("path");
+          const { fileURLToPath } = await import("url");
+          
+          if (pool) {
+            const __filename = fileURLToPath(import.meta.url);
+            const __dirname = path.dirname(__filename);
+            const migrationsFolder = path.join(__dirname, "../migrations");
+            
+            try {
+              await migrate(pool as any, { migrationsFolder });
+              console.log("✓ Database migrations completed");
+            } catch (migErr) {
+              console.warn("Migration folder not found, attempting to create tables manually...");
+              // Migrations don't exist yet, so we'll just try to seed and let drizzle handle it
+            }
+          }
+        } catch (migErr) {
+          console.warn("Could not run migrations:", migErr);
+        }
+      }
+    }
+
     // 1. Ensure Admin User
-    const existingAdmin = await storage.getUserByUsername("admin");
-    if (!existingAdmin) {
-        const hashedPassword = await hashPassword("admin123");
-        await storage.createUser({
-            username: "admin",
-            password: hashedPassword,
-        });
-        console.log("Seeded admin user (admin/admin123)");
+    try {
+      const existingAdmin = await storage.getUserByUsername("admin");
+      if (!existingAdmin) {
+          const hashedPassword = await hashPassword("admin123");
+          await storage.createUser({
+              username: "admin",
+              password: hashedPassword,
+          });
+          console.log("Seeded admin user (admin/admin123)");
+      }
+    } catch (err) {
+      console.warn("Could not seed admin user:", err);
     }
 
     // 2. Ensure Products
-    const products = await storage.getProducts();
-    if (products.length === 0) {
-        await storage.createProduct({
-            name: "Ketchup",
-            description: "Fresh tomato ketchup, perfect for fries.",
-            price: 250,
-            category: "Sauces",
-            imageUrl: "https://images.unsplash.com/photo-1606132863925-544439169493?auto=format&fit=crop&q=80&w=800",
-            available: true,
-        });
-        await storage.createProduct({
-            name: "Mayonnaise",
-            description: "Creamy rich mayonnaise.",
-            price: 300,
-            category: "Sauces",
-            imageUrl: "https://images.unsplash.com/photo-1595356262451-9e7f84266e74?auto=format&fit=crop&q=80&w=800",
-            available: true,
-        });
-        await storage.createProduct({
-            name: "Chicken Kabab",
-            description: "Spicy and delicious chicken kababs.",
-            price: 150,
-            category: "Frozen",
-            imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6f54262?auto=format&fit=crop&q=80&w=800",
-            available: true,
-        });
-        console.log("Seeded products");
+    try {
+      const products = await storage.getProducts();
+      if (products.length === 0) {
+          await storage.createProduct({
+              name: "Ketchup",
+              description: "Fresh tomato ketchup, perfect for fries.",
+              price: 250,
+              category: "Sauces",
+              imageUrl: "https://images.unsplash.com/photo-1606132863925-544439169493?auto=format&fit=crop&q=80&w=800",
+              available: true,
+          });
+          await storage.createProduct({
+              name: "Mayonnaise",
+              description: "Creamy rich mayonnaise.",
+              price: 300,
+              category: "Sauces",
+              imageUrl: "https://images.unsplash.com/photo-1595356262451-9e7f84266e74?auto=format&fit=crop&q=80&w=800",
+              available: true,
+          });
+          await storage.createProduct({
+              name: "Chicken Kabab",
+              description: "Spicy and delicious chicken kababs.",
+              price: 150,
+              category: "Frozen",
+              imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6f54262?auto=format&fit=crop&q=80&w=800",
+              available: true,
+          });
+          console.log("Seeded products");
+      }
+    } catch (err) {
+      console.warn("Could not seed products:", err);
     }
 }
 

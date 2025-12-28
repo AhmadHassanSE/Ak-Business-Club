@@ -7,9 +7,10 @@
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
-    "start:prod": "npm run build && npm start",
+    "start:prod": "npm run build && npm run db:migrate && npm start",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:migrate": "tsx server/migrate.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
