@@ -8,6 +8,7 @@ import { insertProductSchema, insertUserSchema } from "@shared/schema";
 import nodemailer from "nodemailer";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import { waitForDatabase } from "./db";
 
 const scryptAsync = promisify(scrypt);
 
@@ -104,16 +105,35 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       next();
     });
   } else {
-    // Seed Data and setup auth (requires DB)
-    try {
-      await seedDatabase();
-    } catch (e) {
-      console.error("Error while seeding database:", e);
-      throw e;
+    // Wait for database to be available before attempting to seed
+    const dbReady = await waitForDatabase();
+    
+    if (dbReady) {
+      // Seed Data and setup auth (requires DB)
+      try {
+        await seedDatabase();
+      } catch (e) {
+        console.error("Error while seeding database:", e);
+        // Don't throw - allow the app to start even if seeding fails
+        // This allows the API to be available for manual fixes
+        console.warn("Continuing startup despite seeding error");
+      }
+    } else {
+      console.error("Database connection failed. Running with limited functionality.");
+      // Return 503 for database-dependent routes
+      app.use((req, res, next) => {
+        if (req.path.startsWith("/api")) {
+          return res.status(503).json({ message: "Service temporarily unavailable (database not ready)" });
+        }
+        next();
+      });
     }
 
     // Set up authentication (Passport) BEFORE registering routes that use it
-    setupAuth(app);
+    // Only if DB is ready
+    if (dbReady) {
+      setupAuth(app);
+    }
   }
 
   // API Routes

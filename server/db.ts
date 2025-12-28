@@ -37,3 +37,32 @@ if (!process.env.DATABASE_URL) {
     throw err;
   }
 }
+
+// Helper function to wait for database connection with retry logic
+export async function waitForDatabase(maxAttempts = 30, delayMs = 1000): Promise<boolean> {
+  if (!pool) {
+    console.warn("Database pool not initialized. Skipping connection wait.");
+    return false;
+  }
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const client = await pool.connect();
+      await client.query("SELECT NOW()");
+      client.release();
+      // eslint-disable-next-line no-console
+      console.log("✓ Database connection established successfully");
+      return true;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log(`Database connection attempt ${attempt}/${maxAttempts} failed, retrying in ${delayMs}ms...`);
+      if (attempt === maxAttempts) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to connect to database after maximum attempts:", err);
+        return false;
+      }
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return false;
+}
