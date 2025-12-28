@@ -91,11 +91,30 @@ async function seedDatabase() {
 }
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  // Seed Data
-  await seedDatabase();
+  const dbEnabled = !!process.env.DATABASE_URL;
 
-  // Set up authentication (Passport) BEFORE registering routes that use it
-  setupAuth(app);
+  if (!dbEnabled) {
+    console.warn("DATABASE_URL not set — running in lite mode. API endpoints will return 503.");
+
+    // Return 503 for any /api routes so callers get a clear error instead of server crash
+    app.use((req, res, next) => {
+      if (req.path.startsWith("/api")) {
+        return res.status(503).json({ message: "Service temporarily unavailable (no database)" });
+      }
+      next();
+    });
+  } else {
+    // Seed Data and setup auth (requires DB)
+    try {
+      await seedDatabase();
+    } catch (e) {
+      console.error("Error while seeding database:", e);
+      throw e;
+    }
+
+    // Set up authentication (Passport) BEFORE registering routes that use it
+    setupAuth(app);
+  }
 
   // API Routes
   
