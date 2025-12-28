@@ -10,7 +10,8 @@
     "start:prod": "npm run build && npm run db:migrate && npm start",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "db:migrate": "tsx server/migrate.ts"
+    "db:migrate": "tsx server/migrate.ts",
+    "db:fix-password": "tsx server/fix-password.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -4,11 +4,12 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertProductSchema, insertUserSchema } from "@shared/schema";
+import { insertProductSchema, insertUserSchema, users } from "@shared/schema";
 import nodemailer from "nodemailer";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { waitForDatabase } from "./db";
+import { db, waitForDatabase } from "./db";
+import { eq } from "drizzle-orm/sql/expressions/conditions";
 
 const scryptAsync = promisify(scrypt);
 
