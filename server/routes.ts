@@ -184,6 +184,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // We will define them here using the api contract if setupAuth doesn't do it automatically.
   // Passport setup usually adds the login route. We'll verify.
 
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      console.log("Login attempt for username:", username);
+      
+      const user = await db.query.users.findFirst({
+        where: eq(users.username, username),
+      });
+      
+      console.log("User found:", user ? "Yes" : "No");
+      
+      if (!user) {
+        console.log("User not found in database");
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // ... rest of login logic
+    } catch (err) {
+      console.error("Login error:", err);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
   // -- Products --
   app.get(api.products.list.path, async (req, res) => {
     const { search, category } = req.query;
