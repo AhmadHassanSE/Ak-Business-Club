@@ -2,7 +2,10 @@ import { type Product } from "@shared/schema";
 import { useCart } from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Plus, Check } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, Check, Minus } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -11,13 +14,31 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const addToCart = useCart((state) => state.addToCart);
+  const addToCartWithQuantity = useCart((state) => state.addToCartWithQuantity);
   const [isAdded, setIsAdded] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   const handleAdd = () => {
-    addToCart(product);
+    setIsDialogOpen(true);
+  };
+
+  const handleConfirm = () => {
+    addToCartWithQuantity(product, quantity);
     setIsAdded(true);
+    setIsDialogOpen(false);
+    setQuantity(1);
     setTimeout(() => setIsAdded(false), 1500);
+  };
+
+  const increaseQuantity = () => {
+    setQuantity(q => q + 1);
+  };
+
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(q => q - 1);
+    }
   };
 
   return (
@@ -70,6 +91,7 @@ export function ProductCard({ product }: ProductCardProps) {
             }`}
             onClick={handleAdd}
             disabled={!product.available || isAdded}
+            data-testid={`button-add-to-order-${product.id}`}
           >
             {isAdded ? (
               <span className="flex items-center gap-2">
@@ -83,6 +105,87 @@ export function ProductCard({ product }: ProductCardProps) {
               "Unavailable"
             )}
           </Button>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Select Quantity</DialogTitle>
+              </DialogHeader>
+              
+              <div className="py-6">
+                <div className="mb-2">
+                  <p className="font-semibold text-lg text-foreground mb-4">{product.name}</p>
+                  <p className="text-primary font-bold text-2xl mb-6">
+                    ${(product.price / 100).toFixed(2)}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="quantity" className="text-foreground font-medium">
+                    Quantity:
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={decreaseQuantity}
+                      disabled={quantity <= 1}
+                      data-testid="button-decrease-quantity"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="1"
+                      max="999"
+                      value={quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (val > 0) setQuantity(val);
+                      }}
+                      className="w-20 text-center h-10"
+                      data-testid="input-quantity"
+                    />
+                    
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={increaseQuantity}
+                      data-testid="button-increase-quantity"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-secondary/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Total:</p>
+                  <p className="text-2xl font-bold text-primary">
+                    ${((product.price * quantity) / 100).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  data-testid="button-cancel-quantity"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirm}
+                  className="bg-primary hover:bg-primary/90"
+                  data-testid="button-confirm-quantity"
+                >
+                  Add {quantity} to Cart
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardFooter>
       </Card>
     </motion.div>

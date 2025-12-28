@@ -28,9 +28,9 @@ export function Footer() {
           <div>
             <h3 className="font-display font-semibold text-lg mb-4">Contact</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>123 Food Street, Flavor Town</li>
-              <li>+1 (555) 123-4567</li>
-              <li>hello@aktraders.com</li>
+              <li>House no 76X, KSR Madina Town, Faisalabad, Pakistan</li>
+              <li>+92 (321) 9664704</li>
+              <li>akbusinessclub@gmail.com</li>
             </ul>
           </div>
 
@@ -50,7 +50,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} AK Traders. All rights reserved.
+          © {new Date().getFullYear()} AK Business Club. All rights reserved.
         </div>
       </div>
     </footer>

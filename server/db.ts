@@ -4,11 +4,21 @@ import * as schema from "@shared/schema";
 
 const { Pool } = pg;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+export let pool: pg.Pool | undefined;
+export let db: ReturnType<typeof drizzle> | any;
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+if (!process.env.DATABASE_URL) {
+  // Allow running in a "lite" dev mode when no database is configured.
+  // This avoids throwing on startup so the frontend can be served.
+  // API endpoints that access the database will still fail if called.
+  // Developers should set `DATABASE_URL` to connect to Postgres in normal use.
+  // eslint-disable-next-line no-console
+  console.warn(
+    "DATABASE_URL not set. Running in lite mode — database access will be disabled.",
+  );
+  pool = undefined;
+  db = {} as any;
+} else {
+  pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  db = drizzle(pool, { schema });
+}

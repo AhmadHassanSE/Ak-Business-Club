@@ -1,0 +1,8 @@
+nohup: ignoring input
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.cjs
+
+2:19:19 PM [express] serving on port 5000
+2:19:44 PM [express] GET /api/user 401 in 3ms :: {"message":"Unauthorized"}
+2:19:44 PM [express] GET /api/products 304 in 4ms :: [{"id":3,"name":"Chicken Kabab","description":"Spicy and delicious chicken kababs.","price":150,"imageUrl":"https://images.unsplash.com/photo-1603360946369-dc9bb6f54262?auto=format&fit=crop&q=80&w=800","category":"Frozen","available":true},{"id":2,"name":"Mayonnaise","description":"Creamy rich mayonnaise.","price":300,"imageUrl":"https://images.unsplash.com/photo-1595356262451-9e7f84266e74?auto=format&fit=crop&q=80&w=800","category":"Sauces","available":true},{"id":1,"name":"Ketchup","description":"Fresh tomato ketchup, perfect for fries.","price":250,"imageUrl":"https://images.unsplash.com/photo-1606132863925-544439169493?auto=format&fit=crop&q=80&w=800","category":"Sauces","available":true}]

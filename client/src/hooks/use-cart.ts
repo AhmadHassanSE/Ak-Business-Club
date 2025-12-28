@@ -9,6 +9,7 @@ export interface CartItem extends Product {
 interface CartStore {
   items: CartItem[];
   addToCart: (product: Product) => void;
+  addToCartWithQuantity: (product: Product, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
@@ -34,6 +35,22 @@ export const useCart = create<CartStore>()(
           });
         } else {
           set({ items: [...items, { ...product, quantity: 1 }] });
+        }
+      },
+      addToCartWithQuantity: (product, quantity) => {
+        const items = get().items;
+        const existingItem = items.find((item) => item.id === product.id);
+
+        if (existingItem) {
+          set({
+            items: items.map((item) =>
+              item.id === product.id
+                ? { ...item, quantity: item.quantity + quantity }
+                : item
+            ),
+          });
+        } else {
+          set({ items: [...items, { ...product, quantity }] });
         }
       },
       removeFromCart: (productId) => {

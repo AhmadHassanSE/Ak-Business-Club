@@ -91,11 +91,11 @@ async function seedDatabase() {
 }
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  // Set up authentication (Passport)
-  // We need to create server/auth.ts or inline it. 
-  // Given "Lite Mode", I'll inline the auth setup helper call but I need to write it.
-  // Actually, better to write a separate auth.ts to keep it clean, but I'll write it in the next step.
-  // For now, assume setupAuth is imported.
+  // Seed Data
+  await seedDatabase();
+
+  // Set up authentication (Passport) BEFORE registering routes that use it
+  setupAuth(app);
 
   // API Routes
   
@@ -195,11 +195,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.json(order);
   });
-
-  // Seed Data
-  await seedDatabase();
-
-  setupAuth(app); // Helper to setup Passport
 
   return httpServer;
 }

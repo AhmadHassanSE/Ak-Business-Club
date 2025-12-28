@@ -141,7 +141,7 @@ export default function Checkout() {
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
-                            <Input placeholder="(555) 123-4567" {...field} className="rounded-lg h-11" />
+                            <Input placeholder="0300-1234567" {...field} className="rounded-lg h-11" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

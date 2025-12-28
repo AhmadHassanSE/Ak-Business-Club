@@ -59,7 +59,7 @@ export function Navbar() {
             <ChefHat className="h-6 w-6 text-primary-foreground" />
           </div>
           <span className="text-2xl font-display font-bold text-foreground">
-            AK <span className="text-primary">Traders</span>
+            AK <span className="text-primary">Business</span>
           </span>
         </Link>
 
