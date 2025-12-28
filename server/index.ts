@@ -6,6 +6,19 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+// Global error handlers to ensure crashes are logged clearly in hosting logs
+process.on("uncaughtException", (err) => {
+  // eslint-disable-next-line no-console
+  console.error("Uncaught Exception:", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  // eslint-disable-next-line no-console
+  console.error("Unhandled Rejection:", reason);
+  process.exit(1);
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -60,7 +73,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  await registerRoutes(httpServer, app);
+  try {
+    // Log presence of key environment variables to aid debugging on platforms like Railway
+    // eslint-disable-next-line no-console
+    console.log("ENV: DATABASE_URL=" + (process.env.DATABASE_URL ? "(present)" : "(missing)"));
+    // eslint-disable-next-line no-console
+    console.log("ENV: SESSION_SECRET=" + (process.env.SESSION_SECRET ? "(present)" : "(missing)"));
+
+    await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -95,4 +115,9 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("Fatal startup error:", err);
+    process.exit(1);
+  }
 })();

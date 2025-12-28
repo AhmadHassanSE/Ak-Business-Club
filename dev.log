@@ -84,3 +84,4 @@ Total: 1000
 2:51:40 PM [express] GET /api/products 304 in 16ms :: []
 2:51:44 PM [express] GET /api/products 304 in 16ms :: [{"id":1,"name":"Ketchup","description":"Fresh tomato ketchup, perfect for fries.","price":250,"imageUrl":"https://images.unsplash.com/photo-1606132863925-544439169493?auto=format&fit=crop&q=80&w=800","category":"Sauces","available":true},{"id":3,"name":"Chicken Kabab","description":"Spicy and delicious chicken kababs.","price":150,"imageUrl":"https://images.unsplash.com/photo-1603360946369-dc9bb6f54262?auto=format&fit=crop&q=80&w=800","category":"Frozen","available":true}]
 2:51:45 PM [express] GET /api/products 200 in 15ms :: [{"id":3,"name":"Chicken Kabab","description":"Spicy and delicious chicken kababs.","price":150,"imageUrl":"https://images.unsplash.com/photo-1603360946369-dc9bb6f54262?auto=format&fit=crop&q=80&w=800","category":"Frozen","available":true}]
+3:53:01 PM [vite] (client) hmr update /src/pages/contact.tsx, /src/index.css

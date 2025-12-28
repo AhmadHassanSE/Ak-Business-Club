@@ -19,6 +19,21 @@ if (!process.env.DATABASE_URL) {
   pool = undefined;
   db = {} as any;
 } else {
-  pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  db = drizzle(pool, { schema });
+  // Support optional SSL configuration for hosted Postgres (e.g., Railway)
+  const poolConfig: any = { connectionString: process.env.DATABASE_URL };
+
+  // PGSSLMODE or DB_SSL env var can be used to toggle SSL behavior.
+  const pgSslMode = process.env.PGSSLMODE || process.env.DB_SSL;
+  if (pgSslMode === "require" || pgSslMode === "true" || process.env.DATABASE_URL.includes("sslmode=require")) {
+    poolConfig.ssl = { rejectUnauthorized: process.env.DB_SSL_STRICT !== "false" };
+  }
+
+  try {
+    pool = new Pool(poolConfig);
+    db = drizzle(pool, { schema });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("Error initializing database pool:", err);
+    throw err;
+  }
 }

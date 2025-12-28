@@ -29,8 +29,8 @@ export default function Contact() {
     {
       icon: Mail,
       label: "Email",
-      value: "akbusinessclud@gmail.com",
-      href: "mailto:akbusinessclud@gmail.com"
+      value: "akbusinessclub@gmail.com",
+      href: "mailto:akbusinessclub@gmail.com"
     },
     {
       icon: MapPin,
